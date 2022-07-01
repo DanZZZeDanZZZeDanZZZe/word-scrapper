@@ -1,15 +1,28 @@
-const { Hash } = require('crypto')
 const https = require('https')
 const { JSDOM } = require('jsdom')
 const request = require('request')
 
 const BASE_SITE_URL = 'https://wooordhunt.ru'
 
+function getUnderscores(word) {
+    return new Array(word.length).fill('_').join('')
+}
+
+function replaceWordToUnderscores(word, str) {
+    return str.replaceAll(word, getUnderscores(word))
+}
+
 function handleDOM(dom) {
     const doc = dom.window.document
-    const res = {}
 
-    const word = doc.querySelector('h1').childNodes[0].nodeValue.trim('')
+    const word = doc
+        .querySelector('h1')
+        .childNodes[0].nodeValue.trim('')
+        .toLowerCase()
+
+    const explanation = doc.querySelector(
+        '#content_in_russian > div.t_inline_en'
+    ).textContent
 
     const usTranscription = doc.querySelector(
         '#us_tr_sound .transcription'
@@ -19,6 +32,22 @@ function handleDOM(dom) {
 
     const audioUrl = doc.getElementById('audio_us').childNodes[1].src
 
+    const examplesForAnswerArr = Array.from(
+        Array.from(doc.querySelectorAll('h3'))
+            .find((i) => i.textContent === 'Примеры')
+            .nextElementSibling.querySelectorAll('p')
+    ).map(
+        (item, index) =>
+            item.textContent.trim('') + (index % 2 ? '<br><br>' : '<br>')
+    )
+
+    const examplesForAnswer = examplesForAnswerArr.join('')
+    const examplesForQuestion = replaceWordToUnderscores(
+        word,
+        examplesForAnswerArr.filter((_, index) => !(index % 2)).join('<br>')
+    )
+
+    console.log('examplesForAnswer', examplesForAnswer)
     return {
         audio: {
             url: `${BASE_SITE_URL}${audioUrl}`,
@@ -26,7 +55,10 @@ function handleDOM(dom) {
         },
         word,
         transcription: usTranscription,
+        explanation,
         translate: ruTranslate,
+        examplesForAnswer,
+        examplesForQuestion,
     }
 }
 
@@ -41,24 +73,20 @@ function createAnkiCard(cardData) {
                 fields: {
                     Structure: cardData.word,
                     Transcription: cardData.transcription,
-                    Sound: cardData.word,
+                    Explanation: cardData.explanation,
+                    'Examples (for answers)': cardData.examplesForAnswer,
+                    'Examples (for question)': cardData.examplesForQuestion,
                 },
+                tags: ['en_word'],
+                audio: [
+                    {
+                        url: cardData.audio.url,
+                        filename: cardData.audio.filename,
+                        fields: ['Sound'],
+                    },
+                ],
             },
         },
-        audio: [
-            {
-                url: cardData.audio.url,
-                filename: cardData.audio.filename,
-                fields: ['Sound'],
-            },
-        ],
-        picture: [
-            {
-                url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/EU-Romania.svg/285px-EU-Romania.svg.png',
-                filename: 'romania.png',
-                fields: ['Sound'],
-            },
-        ],
     })
 
     request.post(
@@ -75,16 +103,10 @@ function createAnkiCard(cardData) {
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 
-/*::Wfunction findTagByProp(string, propString) {
-    const regEx = new RegExp(<.*?${propString}.*?>(.*?)</.*?>)
-    const result = string.match(regEx)
-
-    return result[1]
-*/
-
 const myArgs = process.argv.slice(2)
 
 if (myArgs.length === 0) {
+    ;``
     console.error('Enter the search phrase as an argument!')
     return null
 }
@@ -94,9 +116,7 @@ if (myArgs.length > 1) {
     return null
 }
 
-// console.log(myArgs)
 const phrase = myArgs[0]
-// console.log('https://wooordhunt.ru/word/' + phrase)
 https
     .get(`${BASE_SITE_URL}/word/${phrase}`, (resp) => {
         let data = ''
@@ -116,8 +136,6 @@ https
             const obj = handleDOM(dom)
             createAnkiCard(obj)
             console.log(obj)
-
-            //            console.log(findTagByProp(data, 'id="us_tr_sound"'))
         })
     })
     .on('error', (err) => {
