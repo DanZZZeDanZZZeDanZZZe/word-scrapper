@@ -15,7 +15,7 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\""
   },
-  "author": "",
+  "author": "Artyom Grankin <jyjyjyj3@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "jsdom": "^20.0.0",
