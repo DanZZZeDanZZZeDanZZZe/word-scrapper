@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { main } from "./main.js"
 
 const BASE_SITE_URL = "https://wooordhunt.ru"

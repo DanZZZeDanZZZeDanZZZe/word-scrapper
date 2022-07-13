@@ -2,7 +2,10 @@
   "name": "word-scrapper",
   "version": "1.0.0",
   "description": "",
-  "exports": "./index.js",
+  "main": "./dist/index.js",
+  "bin": {
+    "scrape-word": "./dist/index.js"
+  },
   "type": "module",
   "scripts": {
     "build": "rimraf dist && tsc",
