@@ -19,6 +19,16 @@ function extractWordData(document: Document) {
   throw new Error(`h1 isn't HTMLElement!`)
 }
 
+function extractWordRankData(document: Document) {
+  const rank = getElementBySelector(document, "#word_rank_box")
+
+  if (rank) {
+    return rank.innerHTML
+  }
+
+  throw new Error(`h1 isn't HTMLElement!`)
+}
+
 function extractTranslationData(document: Document) {
   const selector = "#content_in_russian > div.t_inline_en"
 
@@ -82,6 +92,7 @@ export function extractDOMData(dom: JSDOM): ExtractedWordData {
   const { document } = dom.window
 
   const word = extractWordData(document)
+  const wordRank = extractWordRankData(document)
   const translation = extractTranslationData(document)
   const usTranscription = extractUsTranscriptionData(document)
   const examples = extractExamplesData(document)
@@ -90,6 +101,7 @@ export function extractDOMData(dom: JSDOM): ExtractedWordData {
   return {
     audioUrl,
     word,
+    wordRank,
     usTranscription,
     translation,
     examples,

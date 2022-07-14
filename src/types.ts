@@ -1,6 +1,7 @@
 export type ExtractedWordData = {
   audioUrl: string
   word: string
+  wordRank: string
   usTranscription: string
   translation: string
   examples: string[]

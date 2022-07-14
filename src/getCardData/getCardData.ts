@@ -1,5 +1,5 @@
 import { CardData, ExtractedWordData } from "../types.js"
-import { replaceWordToUnderscores } from "./utils.js"
+import { extractNumber, getRankTag, replaceWordToUnderscores } from "./utils.js"
 
 function getExamplesForAnswer(examples: ExtractedWordData["examples"]) {
   return examples
@@ -7,7 +7,7 @@ function getExamplesForAnswer(examples: ExtractedWordData["examples"]) {
     .join("")
 }
 
-function getExamplesForQuestion(
+export function getExamplesForQuestion(
   examples: ExtractedWordData["examples"],
   word: ExtractedWordData["word"]
 ) {
@@ -39,11 +39,26 @@ function getAudioData(
   ]
 }
 
+function getRankTagData(wordRank: string): string | null {
+  const rankNumber = extractNumber(wordRank)
+  if (rankNumber) {
+    return getRankTag(rankNumber)
+  }
+
+  return null
+}
+
 export function getCardData(wordData: ExtractedWordData, baseUrl: string): CardData {
   const structure = wordData.word.trim().toLocaleLowerCase()
   const examplesForAnswer = getExamplesForAnswer(wordData.examples)
   const examplesForQuestion = getExamplesForQuestion(wordData.examples, structure)
   const audio = getAudioData(wordData.audioUrl, baseUrl)
+
+  const tags = ["eng-word"]
+  const rankTag = getRankTagData(wordData.wordRank)
+  if (rankTag) {
+    tags.push(rankTag)
+  }
 
   return {
     deckName: "__TEMP__",
@@ -55,7 +70,7 @@ export function getCardData(wordData: ExtractedWordData, baseUrl: string): CardD
       "Examples (for answers)": examplesForAnswer,
       "Examples (for question)": examplesForQuestion,
     },
-    tags: ["en_word"],
+    tags,
     audio,
   }
 }
