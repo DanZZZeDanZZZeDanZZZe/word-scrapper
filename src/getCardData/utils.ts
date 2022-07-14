@@ -1,4 +1,4 @@
-function getUnderscores(word: string): string {
+export function getUnderscores(word: string): string {
   return new Array(word.length).fill("_").join("")
 }
 
