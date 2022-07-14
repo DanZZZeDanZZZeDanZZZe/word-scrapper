@@ -42,10 +42,7 @@ function getAudioData(
 export function getCardData(wordData: ExtractedWordData, baseUrl: string): CardData {
   const structure = wordData.word.trim().toLocaleLowerCase()
   const examplesForAnswer = getExamplesForAnswer(wordData.examples)
-  const examplesForQuestion = getExamplesForQuestion(
-    wordData.examples,
-    wordData.word
-  )
+  const examplesForQuestion = getExamplesForQuestion(wordData.examples, structure)
   const audio = getAudioData(wordData.audioUrl, baseUrl)
 
   return {
