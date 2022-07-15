@@ -1,5 +1,5 @@
 {
-  "name": "word-scrapper",
+  "name": "@danzzze/word-scrapper",
   "version": "1.0.1",
   "description": "",
   "main": "./dist/index.js",
