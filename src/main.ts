@@ -2,39 +2,48 @@ import { Network } from "./Network/index.js"
 import { JSDOM } from "jsdom"
 import { extractDOMData } from "./extractDOMData/index.js"
 import { getCardData } from "./getCardData/index.js"
+import { Command } from "commander"
 
-export async function main(baseUrl: string, ankiUrl: string) {
-  const myArgs = process.argv.slice(2)
+async function guiAddCard(
+  word: string,
+  maxExamplesNum: number,
+  baseUrl: string,
+  ankiUrl: string
+) {
+  const network = new Network(baseUrl, ankiUrl)
 
-  if (myArgs.length === 0) {
-    console.error("Enter the search phrase as an argument!")
-    return null
+  const pageData = await network.getPage(word)
+
+  if (pageData) {
+    const dom = new JSDOM(pageData)
+    const data = extractDOMData(dom)
+    const cardData = getCardData(data, maxExamplesNum, baseUrl)
+    console.log(cardData)
+    network.createAnkiCard({
+      action: "guiAddCards",
+      version: 6,
+      params: {
+        note: cardData,
+      },
+    })
   }
+}
 
-  if (myArgs.length > 1) {
-    console.error("To many arguments!")
-    return null
-  }
+export function main(baseUrl: string, ankiUrl: string) {
+  const program = new Command()
 
-  if (myArgs[0]) {
-    const word = myArgs[0]
-    const network = new Network(baseUrl, ankiUrl)
+  program
+    .command("scrape <word>")
+    .option("-e, --examples <number>", "maximum number of examples", "80")
+    .action((word, options) => {
+      const maxExamples = Number(options.examples)
 
-    const pageData = await network.getPage(word)
+      if (isNaN(maxExamples)) {
+        throw new Error("The -e option must be a number!")
+      }
 
-    if (pageData) {
-      const dom = new JSDOM(pageData)
-      const data = extractDOMData(dom)
-      const cardData = getCardData(data, baseUrl)
-      network.createAnkiCard({
-        action: "guiAddCards",
-        version: 6,
-        params: {
-          note: cardData,
-        },
-      })
-    }
-  }
+      guiAddCard(word, maxExamples, baseUrl, ankiUrl)
+    })
 
-  return null
+  program.parse()
 }

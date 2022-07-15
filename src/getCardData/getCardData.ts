@@ -48,10 +48,22 @@ function getRankTagData(wordRank: string): string | null {
   return null
 }
 
-export function getCardData(wordData: ExtractedWordData, baseUrl: string): CardData {
+export function getCardData(
+  wordData: ExtractedWordData,
+  maxExamplesNum: number,
+  baseUrl: string
+): CardData {
   const structure = wordData.word.trim().toLocaleLowerCase()
-  const examplesForAnswer = getExamplesForAnswer(wordData.examples)
-  const examplesForQuestion = getExamplesForQuestion(wordData.examples, structure)
+
+  const maxArrLength = maxExamplesNum * 2
+
+  const examples =
+    wordData.examples.length > maxArrLength
+      ? wordData.examples.slice(0, maxArrLength)
+      : wordData.examples
+
+  const examplesForAnswer = getExamplesForAnswer(examples)
+  const examplesForQuestion = getExamplesForQuestion(examples, structure)
   const audio = getAudioData(wordData.audioUrl, baseUrl)
 
   const tags = ["eng-word"]
